@@ -1,6 +1,7 @@
 import { Authenticated, GitHubBanner, Refine } from "@refinedev/core";
 import { DevtoolsPanel, DevtoolsProvider } from "@refinedev/devtools";
 import { RefineKbar, RefineKbarProvider } from "@refinedev/kbar";
+import React, { useEffect } from "react";
 
 import {
   ErrorComponent,
@@ -34,24 +35,143 @@ import {
   CategoryList,
   CategoryShow,
 } from "./pages/categories";
+import {
+  PatientCreate,
+  PatientEdit,
+  PatientList,
+  PatientShow,
+} from "./pages/patients";
 import { ForgotPassword } from "./pages/forgotPassword";
 import { Login } from "./pages/login";
 import { Register } from "./pages/register";
+import axios from "axios";
+
+
+
+const axiosInstance = axios.create() 
+
+const tokenO = localStorage.getItem("auth");
+
+
+console.log(tokenO)
+// console.log(axiosInstance)
+
+axiosInstance.interceptors.request.use((config) => {
+  const token = JSON.parse(localStorage.getItem("auth"));
+  // console.log(token)
+  if (config.headers) config.headers["Authorization"] = `Bearer ${token}`;
+  return config;
+});
 
 function App() {
+  const data = {
+    username: "admin",
+    password: "admin",
+    rememberMe: true,
+  };
+
+
+
+  // const response = async() => await fetch(
+  //   "http://backend-server:8080/api/authenticate",
+  //   {
+  //     method: "POST",
+  //     headers: {
+  //       "Content-Type": "application/json", // Adjust the content type based on your API requirements
+  //     },
+  //     body: JSON.stringify({
+  //       data
+  //     }),
+  //   }
+  // );
+
+  // console.log(response)
+
+  // fetch("http://backend-server:8080/api/authenticate", {
+  //   method: "POST",
+  //   headers: {
+  //     "Content-Type": "application/json", // Adjust the content type based on your API requirements
+  //   },
+  //   body: JSON.stringify(data),
+  // })
+  //   .then((response) => response.json()) // Parse the JSON response
+  //   .then((responseData) => {
+  //     // Handle the response data
+  //     console.log(responseData);
+  //   })
+  //   .catch((error) => {
+  //     // Handle errors
+  //     console.error("Error:", error);
+  //   });
+
+
+
+  // hey how are you doing 
+  // Where are you from?
+
+
+
+  // useEffect(() => {
+  //   const fetchData = async () => {
+  //     try {
+  //       const response = await fetch(
+  //         "http://backend-server:8080/api/authenticate",
+  //         {
+  //           method: "POST",
+  //           headers: {
+  //             "Content-Type": "application/json", //Adjust the content type based on your API requirements
+  //           },
+  //           body: JSON.stringify(data),
+  //         }
+  //       );
+
+  //       if (!response.ok) {
+  //         throw new Error("Something went wrong!");
+  //       }
+  //       const responseData = await response.json();
+  //       // console.log(responseData);
+  //     } catch (error) {
+  //       console.log(error);
+  //     }
+  //   };
+  //   fetchData();
+  //   // const id_token = await fetchData();
+  // }, []);
+
+
+
+  // const request = new Request("http://backend-server:8080/api/authenticate", {
+  //   method: "POST",
+  //   body: JSON.stringify({ username, password,rememberMe }),
+  //   headers: new Headers({ "Content-Type": "application/json" }),
+  // });
+  // console.log(request.body);
+
   return (
     <BrowserRouter>
-      <GitHubBanner />
       <RefineKbarProvider>
         <ColorModeContextProvider>
           <AntdApp>
             <DevtoolsProvider>
               <Refine
-                dataProvider={dataProvider("https://api.fake-rest.refine.dev")}
+                dataProvider={{
+                  default: dataProvider("https://api.fake-rest.refine.dev"),
+                  patients: dataProvider("http://backend-server:8080/api")
+                }}
                 notificationProvider={useNotificationProvider}
                 routerProvider={routerBindings}
                 authProvider={authProvider}
                 resources={[
+                  {
+                    name: "patients",
+                    list: "/patients",
+                    create: "/patients/create",
+                    edit: "/patients/edit/:id",
+                    show: "/patients/show/:id",
+                    meta: {
+                      canDelete: true,
+                    },
+                  },
                   {
                     name: "blog_posts",
                     list: "/blog-posts",
@@ -100,6 +220,12 @@ function App() {
                       index
                       element={<NavigateToResource resource="blog_posts" />}
                     />
+                    <Route path="/patients">
+                      <Route index element={<PatientList />} />
+                      <Route path="create" element={<PatientCreate />} />
+                      <Route path="edit/:id" element={<PatientEdit />} />
+                      <Route path="show/:id" element={<PatientShow />} />
+                    </Route>
                     <Route path="/blog-posts">
                       <Route index element={<BlogPostList />} />
                       <Route path="create" element={<BlogPostCreate />} />
